@@ -1,5 +1,5 @@
 {
-    "name": "phpunit/phpunit-3.6.12-with-PHP-5.2",
+    "name": "phpunit/phpunit",
     "description": "The PHP Unit Testing framework.",
     "type": "library",
     "keywords": [
