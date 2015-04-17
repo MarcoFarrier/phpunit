@@ -366,56 +366,46 @@ class PHPUnit_Util_GlobalState
         return $result;
     }
 
-    /**
+   /**
      * @return array
      * @since  Method available since Release 3.6.0
      */
     public static function phpunitFiles()
     {
         if (self::$phpunitFiles === NULL) {
-            self::$phpunitFiles = array_merge(
-              phpunit_autoload(),
-              phpunit_mockobject_autoload(),
-              file_iterator_autoload(),
-              php_codecoverage_autoload(),
-              php_timer_autoload(),
-              php_tokenstream_autoload(),
-              text_template_autoload()
-            );
-
-            if (function_exists('phpunit_dbunit_autoload')) {
-                self::$phpunitFiles = array_merge(
-                  self::$phpunitFiles, phpunit_dbunit_autoload()
-                );
-            }
-
-            if (function_exists('phpunit_selenium_autoload')) {
-                self::$phpunitFiles = array_merge(
-                  self::$phpunitFiles, phpunit_selenium_autoload()
-                );
-            }
-
-            if (function_exists('phpunit_story_autoload')) {
-                self::$phpunitFiles = array_merge(
-                  self::$phpunitFiles, phpunit_story_autoload()
-                );
-            }
-
-            if (function_exists('php_invoker_autoload')) {
-                self::$phpunitFiles = array_merge(
-                  self::$phpunitFiles, php_invoker_autoload()
-                );
-            }
-
-            foreach (self::$phpunitFiles as $key => $value) {
-                self::$phpunitFiles[$key] = str_replace(
-                  '/', DIRECTORY_SEPARATOR, $value
-                );
-            }
-
-            self::$phpunitFiles = array_flip(self::$phpunitFiles);
+            self::$phpunitFiles = array();
+            self::addDirectoryContainingClassToPHPUnitFilesList('File_Iterator');
+            self::addDirectoryContainingClassToPHPUnitFilesList('PHP_CodeCoverage');
+            self::addDirectoryContainingClassToPHPUnitFilesList('PHP_Invoker');
+            self::addDirectoryContainingClassToPHPUnitFilesList('PHP_Timer');
+            self::addDirectoryContainingClassToPHPUnitFilesList('PHP_Token');
+            self::addDirectoryContainingClassToPHPUnitFilesList('PHPUnit_Framework_TestCase', 2);
+            self::addDirectoryContainingClassToPHPUnitFilesList('PHPUnit_Extensions_Database_TestCase', 2);
+            self::addDirectoryContainingClassToPHPUnitFilesList('PHPUnit_Framework_MockObject_Generator', 2);
+            self::addDirectoryContainingClassToPHPUnitFilesList('PHPUnit_Extensions_SeleniumTestCase', 2);
+            self::addDirectoryContainingClassToPHPUnitFilesList('PHPUnit_Extensions_Story_TestCase', 2);
+            self::addDirectoryContainingClassToPHPUnitFilesList('Text_Template');
         }
-
         return self::$phpunitFiles;
+    }
+    /**
+     * @param string  $className
+     * @param integer $parent
+     * @since Method available since Release 3.7.2
+     */
+    protected static function addDirectoryContainingClassToPHPUnitFilesList($className, $parent = 1)
+    {
+        if (!class_exists($className)) {
+            return;
+        }
+        $reflector = new ReflectionClass($className);
+        $directory = $reflector->getFileName();
+        for ($i = 0; $i < $parent; $i++) {
+            $directory = dirname($directory);
+        }
+        $facade = new File_Iterator_Facade;
+        foreach ($facade->getFilesAsArray($directory, '.php') as $file) {
+            self::$phpunitFiles[$file] = TRUE;
+        }
     }
 }
